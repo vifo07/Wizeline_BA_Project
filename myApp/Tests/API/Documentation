@@ -1,0 +1,18 @@
+All requests available with their own negative scenarios each. 
+
+Negative scenario different approach for scenario E, on which env variable
+is set as wrong_payment_switch , on which you can change value to 0 or 1. 
+where 0 will keep Cancel request with positive scenarios and valid payment id,
+and 1 will go to scenario E , negavtive scenario, on which wrong payment # is auto created.
+This is a dif approach and we can trigger this value change from console command,
+right now is set as 1 , since this will cover scenario E. 
+
+All scenarios required are tag on test named-Scenario A-G.
+
+Token has been set as env variable, and expected to be set on command line.
+
+To run from command line and generate report, run as> 
+npx newman run .\myApp\Tests\API\collections\Square_Payments.postman_collection.json -e .\myApp\Tests\API\envVariables\Wizeline_Backend_Challenge.postman_environment.json --env-var token='EAAAEDWGEx19JkvX37_AxjcZhokwlTpeFNVVH_j4JC5rh721quFSvtUQBOxOxNGB'  
+
+To generate report run as>
+npx newman run .\myApp\Tests\API\collections\Square_Payments.postman_collection.json -e .\myApp\Tests\API\envVariables\Wizeline_Backend_Challenge.postman_environment.json htmlextra --reporter-htmlextra-export .\myApp\Tests\API\reports --env-var token='EAAAEDWGEx19JkvX37_AxjcZhokwlTpeFNVVH_j4JC5rh721quFSvtUQBOxOxNGB'

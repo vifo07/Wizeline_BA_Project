@@ -1,0 +1,1245 @@
+{
+	"info": {
+		"_postman_id": "2167863d-0745-4919-963a-ca5233065575",
+		"name": "Square_Payments",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Payments",
+			"item": [
+				{
+					"name": "Create_Payment",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"function create_UUID() {\r",
+									"    var dt = new Date().getTime();\r",
+									"    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {\r",
+									"        var r = (dt + Math.random() * 16) % 16 | 0;\r",
+									"        dt = Math.floor(dt / 16);\r",
+									"        return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);\r",
+									"    });\r",
+									"    return uuid;\r",
+									"}\r",
+									"\r",
+									"pm.collectionVariables.set(\"idempotency_key\", (create_UUID()).toString());"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"let payment_id = jsonData.payment.id;\r",
+									"pm.collectionVariables.set(\"payment_id\", payment_id);\r",
+									"\r",
+									"var req = JSON.parse(pm.request.body.raw);\r",
+									"pm.collectionVariables.set(\"amount_sent\", req.amount_money.amount);\r",
+									"pm.collectionVariables.set(\"currency_type\", req.amount_money.currency);\r",
+									"\r",
+									"//SCENARIO A\r",
+									"pm.test(\"SCENARIO A-Verify amount on request matches the one  on response body\", function () {\r",
+									"    pm.expect(pm.collectionVariables.get(\"amount_sent\")).to.equal(jsonData.payment.amount_money.amount)\r",
+									"});\r",
+									"pm.test(\"SCENARIO A-Verify currency on request matches the one  on response body\", function () {\r",
+									"    pm.expect(pm.collectionVariables.get(\"currency_type\")).to.equal(jsonData.payment.amount_money.currency)\r",
+									"});\r",
+									"//TESTS \r",
+									"pm.test(\"Verify status as approved\", function () {\r",
+									"    pm.expect(jsonData.payment.status).to.equal(\"APPROVED\")\r",
+									"    \r",
+									"});\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type header is application/json\", () => {\r",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');\r",
+									"});\r",
+									"pm.test(\"Status code name its OK\", () => {\r",
+									"    pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									"\r",
+									"\r",
+									"\r",
+									"\r",
+									"\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"amount_money\": {\r\n      \"amount\": 350,\r\n      \"currency\": \"USD\"\r\n    },\r\n    \"idempotency_key\":\"{{idempotency_key}}\",\r\n    \"source_id\": \"cnon:card-nonce-ok\",\r\n \r\n    \"source_type\": \"CARD\",\r\n    \"autocomplete\": false\r\n  }\r\n\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{PaymentsUrl}}",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{PaymentsUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "NS-Create_Payment_nonValid_ParthialAutho",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"\r",
+									"\r",
+									"\r",
+									"var req = JSON.parse(pm.request.body.raw);\r",
+									"\r",
+									"//NEGATIVE SCENARIO C\r",
+									"if ((req.source_type) == \"CASH\" & (req.accept_partial_authorization)) {\r",
+									"    pm.test(\"SCENARIO C-Validate Partial Authorization not valid message\", function () {\r",
+									"        pm.expect(jsonData.errors[0].detail).to.equal(\"Accept partial authorization not valid for autocomplete payments.\")\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"\r",
+									"\r",
+									"\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"\r",
+									"//let key=Math.random().toString(36).substring(7)\r",
+									"//pm.globals.set(\"idempotency_key\",key);\r",
+									"\r",
+									"function create_UUID() {\r",
+									"    var dt = new Date().getTime();\r",
+									"    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {\r",
+									"        var r = (dt + Math.random() * 16) % 16 | 0;\r",
+									"        dt = Math.floor(dt / 16);\r",
+									"        return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);\r",
+									"    });\r",
+									"    return uuid;\r",
+									"}\r",
+									"\r",
+									"//onsole.log(create_UUID());\r",
+									"pm.collectionVariables.set(\"idempotency_key\", (create_UUID()).toString());\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"amount_money\": {\r\n      \"amount\": 350,\r\n      \"currency\": \"USD\"\r\n    },\r\n    \"idempotency_key\":\"{{idempotency_key}}\",\r\n    \"source_id\": \"cnon:card-nonce-ok\",\r\n \r\n    \"source_type\": \"CASH\",\r\n    \"accept_partial_authorization\": true\r\n  }\r\n ",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{PaymentsUrl}}",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{PaymentsUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get_All_Payments",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.test(\"Response time is less than 500ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(600);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type header is application/json\", () => {\r",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');\r",
+									"});\r",
+									"pm.test(\"Status code name its OK\", () => {\r",
+									"    pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Square-Version",
+								"value": "2021-05-13",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{PaymentsUrl}}",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{PaymentsUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "NS-Get_All_Payments_IncorrectURL",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"\r",
+									"//NEGTIVE SCENARIO\r",
+									"pm.test(\"Validate status code is 404 when wrong url is given \", function () {\r",
+									"  pm.response.to.have.status(404);//adding \"/\"to url \r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Square-Version",
+								"type": "text",
+								"value": "2021-05-13",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{PaymentsUrl}}/",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{PaymentsUrl}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get_Specific_Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"let payment_id = jsonData.payment.id;\r",
+									"\r",
+									"\r",
+									"\r",
+									"//SCENARIO B\r",
+									"pm.test(\"SCENARIO B-Verify Payment ID matches with created\", function () {\r",
+									"    pm.expect(pm.collectionVariables.get(\"payment_id\")).to.equal(jsonData.payment.id);\r",
+									"    pm.expect(payment_id).to.equal(pm.collectionVariables.get(\"payment_id\"));\r",
+									"});\r",
+									"//TESTS\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type header is application/json\", () => {\r",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');\r",
+									"});\r",
+									"pm.test(\"Status code name has string\", () => {\r",
+									"    pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{PaymentsUrl}}{{payment_id}}",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{PaymentsUrl}}{{payment_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get_Payment_IncorrectID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"//console.log(responseData);\r",
+									"//pm.environment.set(\"amount_sent\", jsonData.resources[0].amount_money);\r",
+									"\r",
+									"\r",
+									"\r",
+									"pm.test(\"Incorrect payment_id \", function () {\r",
+									"  pm.expect(jsonData.errors[0].detail).to.equal(\"Could not find payment with id: \" + pm.collectionVariables.get(\"wrong_payment_id\"))\r",
+									"\r",
+									"});\r",
+									"pm.test(\"Status code is 400s\", function () {\r",
+									"  pm.response.to.have.status(404);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"\r",
+									"var wrongPaymentID = pm.variables.replaceIn(\"{{$randomInt}}\");\r",
+									"pm.collectionVariables.set(\"wrong_payment_id\", wrongPaymentID);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{PaymentsUrl}}{{wrong_payment_id}}",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{PaymentsUrl}}{{wrong_payment_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update_payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var req = JSON.parse(pm.request.body.raw);\r",
+									"//SCENARIO D\r",
+									"pm.test(\"SCENARIO D-Verify Tip amount updated matches with total amount\", function () {\r",
+									"    var total = (pm.collectionVariables.get(\"amount_sent\")) + (req.payment.tip_money.amount)\r",
+									"    pm.collectionVariables.set(\"total\", total)\r",
+									"    pm.expect(total).to.equal(jsonData.payment.total_money.amount)\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Payment_ID\", function () {\r",
+									"    pm.expect(pm.collectionVariables.get(\"payment_id\")).to.equal(jsonData.payment.id)\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type header is application/json\", () => {\r",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');\r",
+									"});\r",
+									"pm.test(\"Status code name has string\", () => {\r",
+									"    pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									"\r",
+									"\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"idempotency_key\":\"{{idempotency_key}}\",\n\t\"payment\": {\n      \"tip_money\": {\n        \"amount\": 30,\n        \"currency\": \"USD\"\n      }\n\t}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{PaymentsUrl}}{{payment_id}}",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{PaymentsUrl}}{{payment_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update_payment_with_CAN_currency",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var req = JSON.parse(pm.request.body.raw);\r",
+									"\r",
+									"pm.test(\"Incorrect payment_id \", function () {\r",
+									"  pm.expect(jsonData.errors[0].detail).to.include(\"`CAN` is not a valid enum value for `Currency`\")\r",
+									"\r",
+									"});\r",
+									"pm.test(\"Status code is 400s\", function () {\r",
+									"  pm.response.to.be.badRequest\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"idempotency_key\":\"{{idempotency_key}}\",\n\t\"payment\": {\n      \"tip_money\": {\n        \"amount\": 30,\n        \"currency\": \"CAN\"\n      }\n\t}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{PaymentsUrl}}{{payment_id}}",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{PaymentsUrl}}{{payment_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel_Payment",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"\r",
+									"if ((pm.environment.get(\"wrong_payment_switch\")) != 0) {\r",
+									"    //Another way to generate random string\r",
+									"    let random_payment_id = Math.random().toString(36).substring(7);\r",
+									"    pm.collectionVariables.set(\"dynamic_payment_id\", random_payment_id);\r",
+									"}\r",
+									"else {\r",
+									"    pm.collectionVariables.set(\"dynamic_payment_id\", pm.collectionVariables.get('payment_id'))\r",
+									"};\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var req = JSON.parse(pm.request.body.raw);\r",
+									"\r",
+									"//NEGATIVE SCENARIO--E\r",
+									"if (pm.environment.get(\"wrong_payment_switch\") != 0) {\r",
+									"    pm.test(\"SCENARIO E- Verify correct message response when Incorrect payment_id is given\", function () {\r",
+									"        pm.expect(jsonData.errors[0].detail).to.equal(\"Could not find payment with id: \" + pm.collectionVariables.get(\"dynamic_payment_id\"))\r",
+									"\r",
+									"    });\r",
+									"    pm.test(\"Status code is 400s\", function () {\r",
+									"        pm.response.to.have.status(404);\r",
+									"    });\r",
+									"}\r",
+									"else {\r",
+									"    pm.test(\"Validate Payment_ID\", function () {\r",
+									"        pm.expect(pm.collectionVariables.get(\"payment_id\")).to.equal(jsonData.payment.id)\r",
+									"    });\r",
+									"    pm.test(\"Validate status change to Cancel\", function () {\r",
+									"        pm.expect(jsonData.payment.status).to.equal(\"CANCELED\")\r",
+									"    });\r",
+									"\r",
+									"    pm.test(\"Status code is 200\", function () {\r",
+									"        pm.response.to.have.status(200);\r",
+									"    });\r",
+									"\r",
+									"    pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"        pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"    });\r",
+									"\r",
+									"    pm.test(\"Content-Type header is application/json\", () => {\r",
+									"        pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');\r",
+									"    });\r",
+									"    pm.test(\"Status code name its OK\", () => {\r",
+									"        pm.response.to.have.status(\"OK\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{PaymentsUrl}}{{dynamic_payment_id}}/cancel",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{PaymentsUrl}}{{dynamic_payment_id}}",
+								"cancel"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Complete",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"pm.test(\"Payment_ID\", function () {\r",
+									"    pm.expect(pm.collectionVariables.get(\"payment_id\")).to.equal(jsonData.payment.id)\r",
+									"});\r",
+									"pm.test(\"Validate status change to Complete\", function () {\r",
+									"    pm.expect(jsonData.payment.status).to.equal(\"COMPLETED\")\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type header is application/json\", () => {\r",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');\r",
+									"});\r",
+									"pm.test(\"Status code name it OK\", () => {\r",
+									"    pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{PaymentsUrl}}{{payment_id}}/complete",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{PaymentsUrl}}{{payment_id}}",
+								"complete"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Complete_withPayment_id_as_\"0\"",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"\r",
+									"\r",
+									"\r",
+									"pm.test(\"Validate Incorrect payment_id message showing \", function () {\r",
+									"  pm.expect(jsonData.errors[0].detail).to.equal(\"Could not find payment with id: \" + pm.collectionVariables.get(\"wrong_payment_id\"))\r",
+									"\r",
+									"});\r",
+									"pm.test(\"Status code is 400s\", function () {\r",
+									"  pm.response.to.have.status(404);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.set(\"wrong_payment_id\", \"0\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{PaymentsUrl}}{{wrong_payment_id}}/complete",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{PaymentsUrl}}{{wrong_payment_id}}",
+								"complete"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Refounds",
+			"item": [
+				{
+					"name": "Refound_payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"let refund_id = jsonData.refund.id;\r",
+									"pm.collectionVariables.set(\"refund_id\", refund_id);\r",
+									"\r",
+									"var bodyjson = pm.request.body;\r",
+									"//SCENARIO G\r",
+									"//Adjusting to get timezone date\r",
+									"pm.sendRequest(\"http://worldtimeapi.org/api/timezone/Europe/London\", function (err, res) {\r",
+									"    var localdateLondon=(res.json().datetime).substring(0,10)\r",
+									"    pm.collectionVariables.set(\"localTimeLondon\", (localdateLondon));\r",
+									"});\r",
+									"var req = JSON.parse(pm.request.body.raw);\r",
+									"pm.test(\"SCENARIO G-Verify Refund Date matches date when it was made\", function () {\r",
+									"    pm.expect(jsonData.refund.created_at).to.include(pm.collectionVariables.get(\"localTimeLondon\"))\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Payment_ID\", function () {\r",
+									"    pm.expect(pm.collectionVariables.get(\"payment_id\")).to.equal(jsonData.refund.payment_id)\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.test(\"Response time is less than 1700ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1700);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type header is application/json\", () => {\r",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');\r",
+									"});\r",
+									"pm.test(\"Status code name it OK\", () => {\r",
+									"    pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var moment = require('moment');\r",
+									"\r",
+									"pm.collectionVariables.set('date', moment().format((\"YYYY-MM-DD\")))\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"amount_money\": {\r\n      \"amount\": {{amount_sent}},\r\n      \"currency\": \"USD\"\r\n    },\r\n    \"payment_id\":\"{{payment_id}}\",\r\n    \"idempotency_key\":\"{{idempotency_key}}\",\r\n    \"reason\": \"fraud\"\r\n  }\r\n  ",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{RefundsUrl}}",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{RefundsUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refound_payment_wrong_Amount",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let highrefundamount = (pm.collectionVariables.get(\"amount_sent\") + 100)\r",
+									"pm.collectionVariables.set(\"higher_refund_amount\", highrefundamount)"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var bodyjson = pm.request.body;\r",
+									"\r",
+									"var req = JSON.parse(pm.request.body.raw);\r",
+									"//NEGATIVE SCENARIO F\r",
+									"pm.test(\"SCENARIO F-Verify correct message when a Higher refund amount is set\", function () {\r",
+									"    pm.expect(jsonData.errors[0].code).to.equal(\"CONFLICTING_PARAMETERS\")//SHOULD IT BE AMOUNT TOO HIGH?\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"amount_money\": {\r\n      \"amount\": {{higher_refund_amount}},\r\n      \"currency\": \"USD\"\r\n    },\r\n    \"payment_id\":\"{{payment_id}}\",\r\n    \"idempotency_key\":\"{{idempotency_key}}\",\r\n    \"reason\": \"fraud\"\r\n  }\r\n  ",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{RefundsUrl}}",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{RefundsUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get_payment_refund",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type header is application/json\", () => {\r",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');\r",
+									"});\r",
+									"pm.test(\"Status code name it OK\", () => {\r",
+									"    pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \r\n  }\r\n  ",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{RefundsUrl}}{{refund_id}}",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{RefundsUrl}}{{refund_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get_payment_refund_IncorrectID",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var wrongrefundID = pm.variables.replaceIn(\"{{$randomInt}}\");\r",
+									"pm.collectionVariables.set(\"wrong_refund_id\", wrongrefundID);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"\r",
+									"pm.test(\"Verify correct response message when an Incorrect refund_id is given \", function () {\r",
+									"  pm.expect(jsonData.errors[0].detail).to.equal(\"Invalid refund_id: \" + pm.collectionVariables.get(\"wrong_refund_id\"))\r",
+									"\r",
+									"});\r",
+									"pm.test(\"Status code is 400s\", function () {\r",
+									"  pm.response.to.be.badRequest\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \r\n  }\r\n  ",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{RefundsUrl}}{{wrong_refund_id}}",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{RefundsUrl}}{{wrong_refund_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List_all_payments_refunds",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type header is application/json\", () => {\r",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');\r",
+									"});\r",
+									"pm.test(\"Status code name it OK\", () => {\r",
+									"    pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{RefundsUrl}}",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{RefundsUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List_all_payments_refunds_Incorrect_URL",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"\r",
+									"//NEGTIVE SCENARIO\r",
+									"pm.test(\"Validate status code is 404 when wrong url is given \", function () {\r",
+									"  pm.response.to.have.status(404);//adding \"/\"to url \r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/{{RefundsUrl}}/",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"{{RefundsUrl}}",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "payment_id",
+			"value": ""
+		},
+		{
+			"key": "idempotency_key",
+			"value": ""
+		},
+		{
+			"key": "refund_id",
+			"value": ""
+		},
+		{
+			"key": "amount_sent",
+			"value": ""
+		},
+		{
+			"key": "wrong_payment_id",
+			"value": ""
+		},
+		{
+			"key": "higher_refund_amount",
+			"value": ""
+		},
+		{
+			"key": "date",
+			"value": ""
+		},
+		{
+			"key": "dynamic_payment_id",
+			"value": ""
+		},
+		{
+			"key": "currency_type",
+			"value": ""
+		},
+		{
+			"key": "wrong_payment_switch",
+			"value": "1"
+		},
+		{
+			"key": "localTimeLondon",
+			"value": ""
+		},
+		{
+			"key": "wrong_refund_id",
+			"value": ""
+		},
+		{
+			"key": "total",
+			"value": ""
+		}
+	]
+}
